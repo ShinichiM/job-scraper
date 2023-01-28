@@ -10,6 +10,7 @@ exports.scrape = functions
   .https.onRequest(async (req, res) => {
     const jobTitle = req.query.title;
     const jobLocation = req.query.location;
+    console.log(jobTitle, jobLocation);
     scrapeWebsiteForJobs(jobTitle, jobLocation)
       .then((jobResults) => {
         console.log(jobResults, " - - Job Results Console Log");

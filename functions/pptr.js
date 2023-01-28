@@ -1,7 +1,6 @@
 const puppeteer = require("puppeteer");
 
 const scrapeWebsiteForJobs = async (jobTitle, jobLocation) => {
-  // let jobResults = [];
   const browser = await puppeteer.launch({
     headless: true,
   });
@@ -44,17 +43,37 @@ const scrapeWebsiteForJobs = async (jobTitle, jobLocation) => {
       const testResultsList = [...document.querySelectorAll(resultsSelector)];
 
       return testResultsList.map((jobData) => {
-        const jobTitle = jobData.querySelector("span").textContent;
-        const jobCompany = jobData.querySelector(".companyName").textContent;
+        const jobTitle = jobData.querySelector(
+          ".jobTitle > a > span"
+        )?.textContent;
+
+        const jobCompany = jobData.querySelector(".companyName")?.textContent;
+
         const jobLocation =
-          jobData.querySelector(".companyLocation").textContent;
+          jobData.querySelector(".companyLocation")?.textContent;
         const jobSnippet = jobData.querySelector(
           ".job-snippet > ul > li"
-        ).textContent;
+        )?.textContent;
+
+        const salary = jobData.querySelector(
+          ".salary-snippet-container > div"
+        )?.textContent;
+
+        const link = jobData.querySelector(".jobTitle > a")?.href;
+        const rating = jobData.querySelector(
+          ".ratingsDisplay > span > span"
+        )?.textContent;
+
         let experience = false;
-        if (jobTitle.includes("Senior")) {
-          experience = true;
-        }
+
+        // check if job title contains the words listed in seniorPosition Array
+        const seniorPosition = ["Senior", "senior", "Sr.", "Sr", "sr", "sr."];
+        seniorPosition.forEach((item) => {
+          if (jobTitle.includes(item)) {
+            experience = true;
+          }
+        });
+
         if (jobSnippet.includes("experience")) {
           experience = true;
         }
@@ -63,13 +82,15 @@ const scrapeWebsiteForJobs = async (jobTitle, jobLocation) => {
           company: jobCompany,
           location: jobLocation,
           experience: experience,
+          salary: salary,
+          link: link,
+          rating: rating,
         };
       });
     }, resultsSelector);
 
     return searchResults;
   } catch (error) {
-    console.log(error, " 00 - Error Log");
     console.error(error);
   } finally {
     if (browser) {
