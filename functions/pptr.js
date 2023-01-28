@@ -69,12 +69,12 @@ const scrapeWebsiteForJobs = async (jobTitle, jobLocation) => {
         // check if job title contains the words listed in seniorPosition Array
         const seniorPosition = ["Senior", "senior", "Sr.", "Sr", "sr", "sr."];
         seniorPosition.forEach((item) => {
-          if (jobTitle.includes(item)) {
+          if (jobTitle?.includes(item)) {
             experience = true;
           }
         });
 
-        if (jobSnippet.includes("experience")) {
+        if (jobSnippet?.includes("experience")) {
           experience = true;
         }
         return {
