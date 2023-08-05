@@ -25,7 +25,7 @@
   <h3 align="center">Job-Scraper</h3>
 
   <p align="center">
-    <a href="https://us-central1-job-scraper-5b752.cloudfunctions.net/scrape?title=Software%20Engineer&location=Seattle,%20Washington">View Demo</a>
+    <a href="https://us-central1-job-scraper-5b752.cloudfunctions.net/scrapeIndeed?q=Software%20Developer&l=Seattle,%20Washington">View Demo</a>
     ·
     <a href="https://github.com/ShinichiM/job-scraper/issues">Report a Bug</a>
     ·
