@@ -1,95 +1,72 @@
 const puppeteer = require("puppeteer");
 
 const scrapeWebsiteForJobs = async (jobTitle, jobLocation) => {
+  const PROXY_USERNAME = process.env.PROXY_USERNAME;
+  const PROXY_PASSWORD = process.env.PROXY_PASSWORD;
+  const PROXY_SERVER_PORT = process.env.PROXY_SERVER_PORT;
+
   const browser = await puppeteer.launch({
-    headless: true,
+    ignoreHTTPSErrors: true,
+    headless: false,
+    args: [
+      `--proxy-server=http://${PROXY_USERNAME}.render=true:${PROXY_SERVER_PORT}`,
+    ],
+  });
+
+  const page = await browser.newPage();
+  await page.authenticate({
+    username: PROXY_USERNAME,
+    password: PROXY_PASSWORD,
   });
 
   try {
-    const page = await browser.newPage();
     await page.setUserAgent(
       "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.125 Safari/537.36"
     );
-
-    await page.goto("https://www.indeed.com", {
-      waitUntil: "networkidle0",
+    const url = `https://www.indeed.com/jobs?q=${jobTitle}&l=${jobLocation}`;
+    console.log(url);
+    await page.setViewport({ width: 1280, height: 720 });
+    await page.goto(url, {
+      waitUntil: "load",
+      timeout: 180000,
     });
 
-    // html input element selectors by ID and class
-    const jobInputSelector = "#text-input-what";
-    const locationInputSelector = "#text-input-where";
+    const pageSource = await page.content({ waitUntil: "domcontentloaded" });
+    const re =
+      /window.mosaic.providerData\["mosaic-provider-jobcards"\]=(\{.+?\});/;
 
-    // input job title into HTML Input Element
-    await page.type(jobInputSelector, jobTitle);
+    const jobData = JSON.parse(
+      pageSource
+        .match(re)[0]
+        .replace('window.mosaic.providerData["mosaic-provider-jobcards"]=', "")
+        .replaceAll(";", "")
+    );
+    // console.log(jobData);
+    // returns [{ company: "company name", normTitle: "job title", displayTitle: "job title", companyRatin: "rating", companyReviewCount: "number of reviews", extractedSalary: {max: max salary, min: min Salary, type: "yearly/hourly"}, jobkey: "job key for posting", urgentlyHiring: "true/false", newJob: "true/false", formattedLocation: "job location", salarySnippet: {currency: "$$", text: "salary in text form ", title: "job title", viewJobLink: "search parameters" <---> will need to .split("&") since we only need /viewjob?jk=xyz which we replace in the url after indeed.com/ <--> gets us to singular job page and description} }]
+    const jobResults =
+      jobData["metaData"]["mosaicProviderJobCardsModel"]["results"];
 
-    // remove any pre-filled text in location input element;
-    await page.click(locationInputSelector);
-    await page.click(locationInputSelector, { clickCount: 3, delay: 100 });
-    await page.keyboard.press("Backspace");
-
-    // input location into HTML Input Element
-    await page.type(locationInputSelector, jobLocation);
-
-    // press Enter to initiate search
-    await page.keyboard.press("Enter");
-
-    await page.waitForNavigation({ waitUntil: "networkidle0" });
-
-    // Wait for the results page to load and display the results.
-    const resultsSelector = ".job_seen_beacon";
-    await page.waitForSelector(resultsSelector);
-
-    const searchResults = await page.evaluate((resultsSelector) => {
-      const testResultsList = [...document.querySelectorAll(resultsSelector)];
-
-      return testResultsList.map((jobData) => {
-        const jobTitle = jobData.querySelector(
-          ".jobTitle > a > span"
-        )?.textContent;
-
-        const jobCompany = jobData.querySelector(".companyName")?.textContent;
-
-        const jobLocation =
-          jobData.querySelector(".companyLocation")?.textContent;
-        const jobSnippet = jobData.querySelector(
-          ".job-snippet > ul > li"
-        )?.textContent;
-
-        const salary = jobData.querySelector(
-          ".salary-snippet-container > div"
-        )?.textContent;
-
-        const link = jobData.querySelector(".jobTitle > a")?.href;
-        const rating = jobData.querySelector(
-          ".ratingsDisplay > span > span"
-        )?.textContent;
-
-        let experience = false;
-
-        // check if job title contains the words listed in seniorPosition Array
-        const seniorPosition = ["Senior", "senior", "Sr.", "Sr", "sr", "sr."];
-        seniorPosition.forEach((item) => {
-          if (jobTitle?.includes(item)) {
-            experience = true;
-          }
-        });
-
-        if (jobSnippet?.includes("experience")) {
-          experience = true;
-        }
-        return {
-          title: jobTitle,
-          company: jobCompany,
-          location: jobLocation,
-          experience: experience,
-          salary: salary,
-          link: link,
-          rating: rating,
-        };
-      });
-    }, resultsSelector);
-
-    return searchResults;
+    const data = jobResults.map((job) => {
+      return {
+        company: job.company,
+        title: job.normTitle,
+        displayTitle: job.displayTitle,
+        salary: {
+          max: job.extractedSalary?.max ? job.extractedSalary?.max : "N/A",
+          min: job.extractedSalary?.min ? job.extractedSalary?.min : "N/A",
+          type: job.extractedSalary?.type ? job.extractedSalary?.type : "N/A",
+        },
+        salarySnippet: job?.salarySnippet ? job?.salarySnippet : "N/A",
+        location: job.formattedLocation,
+        jobkey: job.jobkey,
+        remote: job.remoteLocation,
+        rating: job.companyRating,
+        numReviews: job.companyReviewCount,
+        linkToJob: job.viewJobLink,
+      };
+    });
+    console.log(data);
+    return data;
   } catch (error) {
     console.error(error);
   } finally {
