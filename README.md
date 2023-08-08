@@ -80,7 +80,7 @@ determined by: whether the job is a Senior position or if prior experience is st
 
 The API endpoint below. Copy and paste this endpoint and input the job title and location that you're looking for!
 ```
-https://us-central1-job-scraper-5b752.cloudfunctions.net/scrape?title={Input a Job Title}&location={Input a Location}.
+https://us-central1-job-scraper-5b752.cloudfunctions.net/scrapeIndeed?q={Input a Job Title}&l={Input a Location}
 ```
 
 
@@ -90,7 +90,9 @@ https://us-central1-job-scraper-5b752.cloudfunctions.net/scrape?title={Input a J
 
 * [Node.js](https://nodjs.org/)
 * [JavaScript](https://www.javascript.com/)
+* [TypeScript](https://www.typescriptlang.org/)
 * [Firebase](https://firebase.google.com/)
+* [ScraperAPI](https://www.scraperapi.com/)
 * [Puppeteer.js](https://pptr.dev/)
 
 <p align="right">(<a href="#top">back to top</a>)</p>
@@ -114,7 +116,7 @@ _Below is an example of how you can install and setting up this application. Thi
    ```
 3. Start firebase emulator for local testing
    ```js
-   npm run serve
+   npm run serve or firebase emulators:start (will need to npm install firebase-tools prior to this command)
    ```
 
 <p align="right">(<a href="#top">back to top</a>)</p>
@@ -143,7 +145,7 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 
 Shinichi Miyakawa - miyakawashi@gmail.com
 
-Project Link: [https://github.com/shinichiM/job-scraper](https://us-central1-job-scraper-5b752.cloudfunctions.net/scrape?title=Software%20Engineer&location=Seattle,%20Washington)
+Project Link: [https://github.com/shinichiM/job-scraper](https://us-central1-job-scraper-5b752.cloudfunctions.net/scrapeIndeed?title=Software%20Engineer&location=Seattle,%20Washington)
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
